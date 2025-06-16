@@ -13,23 +13,24 @@ import (
 // Returns nil if the test passes successfully.
 func Run(ctx context.Context, cb func(testing.TB)) error {
 	t := New(ctx, "test")
-	
-	// capture test panics, from assertions, skips, or otherwise
-	defer func() {
-		x := recover()
-		switch x {
-		case nil:
-		case testSkipped{}, testFailed{}:
-		default:
-			t.Errorf("PANIC: %v", x)
-		}
-	}()
-	
-	cb(t)
-	
+
+	(func() {
+		// capture test panics, from assertions, skips, or otherwise
+		defer func() {
+			x := recover()
+			switch x {
+			case nil:
+			case testSkipped{}, testFailed{}:
+			default:
+				t.Errorf("PANIC: %v", x)
+			}
+		}()
+		cb(t)
+	})()
+
 	if t.Failed() {
 		return fmt.Errorf("test failed:\n%s", t.Logs())
 	}
-	
+
 	return nil
 }
